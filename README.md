@@ -1,4 +1,4 @@
 # cs537_p3a
 
-Authors: Collin and Sui Jiet
+Authors: Collin AKA Superman and Sui Jiet
 Project title: Parallel Sort
