@@ -2,7 +2,7 @@
 #include <stdlib.h>
 
 int main(int argc, char *argv[]) {
-    unsigned char buffer[100];
+    unsigned char *buffer = malloc(100*sizeof(char));
     FILE *fp;
     fp = fopen("output.bin", "rb");
     fread(buffer, sizeof(buffer), 1, fp);
