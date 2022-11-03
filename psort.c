@@ -4,6 +4,7 @@
 #include <sys/mman.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <string.h>
 #define RECORD_SIZE 100
 
 // Functions
@@ -12,6 +13,7 @@
 // Returns positive number if record 1 is > record 2
 int compare(int indexOfRecord1, int indexOfRecord2){
 
+    return -1;
 }
 
 int stride(int index){
@@ -25,7 +27,7 @@ void merge(char* buf, int bufSize, int l, int m, int r){
     int n2 = r - m;
 
     char* returnBuf;
-    memcpy(returnBuf, buf, bufSize);
+    strncpy(returnBuf, buf, bufSize);
 
     // Create temp array for each division
     int Lstride[n1], Rstride[n2];
@@ -40,7 +42,8 @@ void merge(char* buf, int bufSize, int l, int m, int r){
 
     }
 
-    i, j = 0;
+    i = 0; 
+    j = 0;
     k = l;
 
     while(i < n1 && j < n2){
@@ -61,10 +64,10 @@ void mergeSort(char* buf, int bufSize, int l, int r){
     if(l < r){
         int m = l + (r-l) /2;
 
-        mergeSort(buf, l, m);
-        mergeSort(buf, m+1, r);
+        mergeSort(buf, bufSize, l, m);
+        mergeSort(buf, bufSize, m+1, r);
 
-        merge(buf, l, m , r);
+        merge(buf, bufSize, l, m , r);
 
     }
 
