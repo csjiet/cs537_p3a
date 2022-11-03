@@ -6,8 +6,69 @@
 #include <fcntl.h>
 #define RECORD_SIZE 100
 
-// Global variable
-char* buf;
+// Functions
+// This function compares which character bytes are larger in size
+// Returns negative number if record 1 is <= than record 2
+// Returns positive number if record 1 is > record 2
+int compare(int indexOfRecord1, int indexOfRecord2){
+
+}
+
+int stride(int index){
+    return index*100;
+}
+
+
+void merge(char* buf, int bufSize, int l, int m, int r){
+    int i, j, k;
+    int n1 = m - l + 1;
+    int n2 = r - m;
+
+    char* returnBuf;
+    memcpy(returnBuf, buf, bufSize);
+
+    // Create temp array for each division
+    int Lstride[n1], Rstride[n2];
+
+    // Copy data to temp arrays
+    for(i = 0; i< n1; i++){
+        Lstride[i] = stride(l+i);
+    }
+
+    for(j=0; j< n2; j++){
+        Rstride[j] = stride(m+ 1 + j);
+
+    }
+
+    i, j = 0;
+    k = l;
+
+    while(i < n1 && j < n2){
+        if(compare(Lstride[i], Rstride[j]) < 0){
+            returnBuf[stride(k)] = buf[Lstride[i]];
+        }
+
+    }
+
+    // Remember to assign buf pointer with returnBuf
+    // and munmap() returnBuf
+
+
+}
+
+void mergeSort(char* buf, int bufSize, int l, int r){
+
+    if(l < r){
+        int m = l + (r-l) /2;
+
+        mergeSort(buf, l, m);
+        mergeSort(buf, m+1, r);
+
+        merge(buf, l, m , r);
+
+    }
+
+}
 
 int main(int argc, char *argv[]) {
     struct stat st;
@@ -20,10 +81,10 @@ int main(int argc, char *argv[]) {
     if(fstat(fd, &st) == -1)
         perror("Couldn't get file size\n");
 
-    size = st.st_size;
+    int bufSize = st.st_size;
 
     // Map the input file into a buffer
-    buf = mmap(NULL, size, PROT_READ, MAP_PRIVATE, fd, 0);
+    char* buf = mmap(NULL, bufSize, PROT_READ, MAP_PRIVATE, fd, 0);
 
     // Each record can be accessed in 100 byte strides: index*100. 
     // Each record's first 4 bytes can be accessed by reading range: index*100 to (index*100)+4
