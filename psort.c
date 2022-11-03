@@ -16,6 +16,14 @@ int compare(int indexOfRecord1, int indexOfRecord2){
     return -1;
 }
 
+// This function compares which character bytes are larger in size
+// Returns negative number if record 1 is <= than record 2
+// Returns positive number if record 1 is > record 2
+int compareRecords(char* record1, char* record2){
+
+    return -1;
+}
+
 int stride(int index){
     return index*100;
 }
@@ -26,35 +34,42 @@ void merge(char* buf, int bufSize, int l, int m, int r){
     int n1 = m - l + 1;
     int n2 = r - m;
 
-    char* returnBuf;
-    strncpy(returnBuf, buf, bufSize);
+    char L[n1 * RECORD_SIZE], R[n2 * RECORD_SIZE];
 
-    // Create temp array for each division
-    int Lstride[n1], Rstride[n2];
+    // Copy temp array for each division
+   
+    // memcpy(&L, &buf[stride(l)], n1 * RECORD_SIZE);
+    // memcpy(&R, &buf[stride(m + 1)], n2 * RECORD_SIZE);
+    memcpy(&L, (buf + stride(l)), n1 * RECORD_SIZE);
+    memcpy(&R, (buf + stride(m + 1)), n2 * RECORD_SIZE);
 
-    // Copy data to temp arrays
-    for(i = 0; i< n1; i++){
-        Lstride[i] = stride(l+i);
-    }
-
-    for(j=0; j< n2; j++){
-        Rstride[j] = stride(m+ 1 + j);
-
-    }
-
-    i = 0; 
+    i = 0;
     j = 0;
     k = l;
 
     while(i < n1 && j < n2){
-        if(compare(Lstride[i], Rstride[j]) < 0){
-            returnBuf[stride(k)] = buf[Lstride[i]];
+        if(compareRecords((L + stride(i)), (R + stride(j))) < 0){
+            memcpy((buf + stride(k)), &L[stride(i)], RECORD_SIZE);
+            i++;
+        }else{
+            memcpy((buf + stride(k)), &R[stride(j)], RECORD_SIZE);
+            j++;
         }
-
+        k++;
     }
 
-    // Remember to assign buf pointer with returnBuf
-    // and munmap() returnBuf
+    // Copy remaining elements
+    while(i < n1){
+        memcpy((buf + stride(k)), &L[stride(i)], RECORD_SIZE);
+        i++;
+        k++;
+    }
+
+    while(j < n2){
+        memcpy((buf + stride(k)), &R[stride(j)], RECORD_SIZE);
+        j++;
+        k++;
+    }
 
 
 }
@@ -75,7 +90,7 @@ void mergeSort(char* buf, int bufSize, int l, int r){
 
 int main(int argc, char *argv[]) {
     struct stat st;
-    int size;
+    int bufSize;
     
     // Open a file
     int fd = open(argv[1], O_RDONLY, S_IRUSR | S_IWUSR);  
@@ -84,7 +99,7 @@ int main(int argc, char *argv[]) {
     if(fstat(fd, &st) == -1)
         perror("Couldn't get file size\n");
 
-    int bufSize = st.st_size;
+    bufSize = st.st_size;
 
     // Map the input file into a buffer
     char* buf = mmap(NULL, bufSize, PROT_READ, MAP_PRIVATE, fd, 0);
@@ -98,6 +113,10 @@ int main(int argc, char *argv[]) {
         printf("%c", buf[i]);
     }
     */
+
+   // Calls merge sort
+   int numberOfRecords = bufSize/ RECORD_SIZE;
+   //mergeSort(buf, bufSize, 0, numberOfRecords - 1);
 
     return 0;
 }
