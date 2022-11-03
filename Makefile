@@ -14,6 +14,14 @@ hexDump: input.bin output.bin
 	hexdump input.bin > inputHex.txt
 	hexdump output.bin > outputHex.txt
 
+hexDumpVerbose: input.bin output.bin
+	hexdump --canonical input.bin > inputHex.txt
+	hexdump --canonical output.bin > outputHex.txt
+
+hexDumpInteger: input.bin output.bin
+	hexdump -d input.bin > inputHex.txt
+	hexdump -d output.bin > outputHex.txt
+
 clean:
 	rm -rf ./*.o
 	rm -f output.bin

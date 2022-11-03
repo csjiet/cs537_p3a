@@ -20,8 +20,14 @@ int compare(int indexOfRecord1, int indexOfRecord2){
 // Returns negative number if record 1 is <= than record 2
 // Returns positive number if record 1 is > record 2
 int compareRecords(char* record1, char* record2){
-
-    return -1;
+    int key1 = *(int*) record1;
+    int key2 = *(int*) record2;
+    
+    if(key1 <= key2){
+        return -1;
+    }else{
+        return 1;
+    }
 }
 
 // Each record can be accessed in 100 byte strides: index*100. 
