@@ -25,8 +25,7 @@ hexDumpInteger: input.bin output.bin
 genRandBin:
 	dd if=/dev/random of=output.bin bs=1000 count=1 iflag=fullblock
 
-copyBackup:
-	cp * backup/.
+
 
 clean:
 	rm -rf ./*.o
