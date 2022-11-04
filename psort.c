@@ -107,7 +107,7 @@ int main(int argc, char *argv[]) {
     
     // Open a file
     //int fd = open(argv[1], O_RDONLY, S_IRUSR | S_IWUSR);  
-    int fd = open(argv[1], O_RDWR | __O_LARGEFILE, S_IRUSR | S_IWUSR);  
+    int fd = open(argv[1], O_RDWR, S_IRUSR | S_IWUSR);  
 
     // Retrieves size of input file
     if(fstat(fd, &st) == -1)
