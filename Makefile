@@ -19,8 +19,8 @@ hexDumpVerbose: input.bin output.bin
 	hexdump --canonical output.bin > outputHex.txt
 
 hexDumpInteger: input.bin output.bin
-	hexdump -e'100/1 "%d ""\n"' output.bin > outputHex.txt
-	hexdump -e'100/1 "%d ""\n"' input.bin > inputHex.txt
+	hexdump -e'25/4 "%d ""\n"' output.bin > outputHex.txt
+	hexdump -e'25/4 "%d ""\n"' input.bin > inputHex.txt
 
 clean:
 	rm -rf ./*.o
