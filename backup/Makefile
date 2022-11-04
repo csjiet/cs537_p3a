@@ -22,6 +22,12 @@ hexDumpInteger: input.bin output.bin
 	hexdump -e'25/4 "%d ""\n"' output.bin > outputHex.txt
 	hexdump -e'25/4 "%d ""\n"' input.bin > inputHex.txt
 
+genRandBin:
+	dd if=/dev/random of=output.bin bs=1000 count=1 iflag=fullblock
+
+copyBackup:
+	cp * backup/.
+
 clean:
 	rm -rf ./*.o
 	rm -f output.bin
