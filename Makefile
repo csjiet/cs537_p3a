@@ -23,7 +23,7 @@ hexDumpInteger: input.bin output.bin
 	hexdump -e'25/4 "%d ""\n"' input.bin > inputHex.txt
 
 genRandBin:
-	dd if=/dev/random of=input.bin bs=1000 count=1 iflag=fullblock
+	dd if=/dev/random of=input.bin bs=10000000 count=1 iflag=fullblock
 
 
 

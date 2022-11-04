@@ -6,6 +6,7 @@
 #include <fcntl.h>
 #include <string.h>
 #define RECORD_SIZE 100
+#define MAP_HUGE_1GB (30 << MAP_HUGE_SHIFT)
 
 // Functions
 // This function compares which character bytes are larger in size
@@ -43,6 +44,8 @@ void merge(char* buf, int bufSize, int l, int m, int r){
     int n2 = r - m;
 
     char L[n1 * RECORD_SIZE], R[n2 * RECORD_SIZE];
+    //char* L = mmap(NULL, n1* RECORD_SIZE, PROT_WRITE, MAP_PRIVATE, 0, 0);
+    //char* R = mmap(NULL, n2* RECORD_SIZE, PROT_WRITE, MAP_PRIVATE, 0, 0);
 
     // Copy temp array for each division
    
@@ -103,7 +106,8 @@ int main(int argc, char *argv[]) {
     int bufSize;
     
     // Open a file
-    int fd = open(argv[1], O_RDONLY, S_IRUSR | S_IWUSR);  
+    //int fd = open(argv[1], O_RDONLY, S_IRUSR | S_IWUSR);  
+    int fd = open(argv[1], O_RDWR | __O_LARGEFILE, S_IRUSR | S_IWUSR);  
 
     // Retrieves size of input file
     if(fstat(fd, &st) == -1)
@@ -112,7 +116,9 @@ int main(int argc, char *argv[]) {
     bufSize = st.st_size;
 
     // Map the input file into a buffer
-    char* buf = mmap(NULL, bufSize, PROT_WRITE, MAP_PRIVATE, fd, 0);
+    //char* buf = mmap(NULL, bufSize, PROT_WRITE, MAP_PRIVATE, fd, 0);
+    char* buf = mmap(NULL, bufSize, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_NORESERVE, fd, 0);
+
 
     // Loops through each character in the binary file
     /*
