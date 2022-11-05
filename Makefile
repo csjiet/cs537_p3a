@@ -1,8 +1,8 @@
 run: compile
-	./psort input.bin
+	./psort input output
 
 runR: compileR
-	./psort input.bin
+	./psort input output
 
 compile:
 	gcc -Wall -Werror -pthread -O psort.c -o psort  
@@ -23,13 +23,15 @@ hexDumpInteger: input.bin output.bin
 	hexdump -e'25/4 "%d ""\n"' input.bin > inputHex.txt
 
 genRandBin:
-	dd if=/dev/random of=input.bin bs=1000 count=1 iflag=fullblock
+	dd if=/dev/random of=input bs=1000 count=1 iflag=fullblock
 
 
 
 clean:
 	rm -rf ./*.o
-	rm -f output.bin
+	rm -rf tests-out
+	rm -f input
+	rm -f output
 	rm -f inputHex.txt
 	rm -f outputHex.txt
 

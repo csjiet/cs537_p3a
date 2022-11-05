@@ -4,6 +4,7 @@
 #include <sys/mman.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <sys/types.h>
 #include <string.h>
 #define RECORD_SIZE 100
 #define MAP_HUGE_1GB (30 << MAP_HUGE_SHIFT)
@@ -120,13 +121,14 @@ int main(int argc, char *argv[]) {
     struct stat st;
     
     // Open a file
-    //int fd = open(argv[1], O_RDONLY, S_IRUSR | S_IWUSR);  
+    //int fd = open(argv[1], O_RDONLY, S_IRUSR | S_IWUSR);
+    printf("ARGV[1]: %s\n", argv[1]);
     int fd = open(argv[1], O_RDWR, S_IRUSR | S_IWUSR);  
 
     // Retrieves size of input file
-    if(fstat(fd, &st) == -1)
+    if(fstat(fd, &st) == -1) {
         perror("Couldn't get file size\n");
-
+    }
     bufSize = st.st_size;
 
     // Map the input file into a buffer
@@ -148,7 +150,7 @@ int main(int argc, char *argv[]) {
 
     // Write to an output file
     int file, ret;
-    file = creat("output.bin", S_IWUSR | S_IRUSR);
+    file = creat(argv[2], S_IWUSR | S_IRUSR);
     if(file < -1){
             perror("creat() error\n");
             exit(1);
