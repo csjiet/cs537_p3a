@@ -122,15 +122,21 @@ int main(int argc, char *argv[]) {
     
     // Open a file
     //int fd = open(argv[1], O_RDONLY, S_IRUSR | S_IWUSR);
-    printf("ARGV[1]: %s\n", argv[1]);
-    int fd = open(argv[1], O_RDWR, S_IRUSR | S_IWUSR);  
-
+    int fd = open(argv[1], O_RDONLY, S_IRUSR | S_IWUSR);  
+    // if (fd == -1) {
+    //     perror("File doesn't exist");
+    // }
     // Retrieves size of input file
-    if(fstat(fd, &st) == -1) {
-        perror("Couldn't get file size\n");
+    if (fstat(fd, &st) == -1) {
+        fprintf(stderr, "An error has occurred\n");
+        exit(0);
     }
     bufSize = st.st_size;
 
+    if (bufSize == 0) {
+        fprintf(stderr, "An error has occurred\n");
+        exit(0);
+    }
     // Map the input file into a buffer
     //char* buf = mmap(NULL, bufSize, PROT_WRITE, MAP_PRIVATE, fd, 0);
     buf = mmap(NULL, bufSize, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_NORESERVE, fd, 0);

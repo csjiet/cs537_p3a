@@ -25,7 +25,8 @@ hexDumpInteger: input.bin output.bin
 genRandBin:
 	dd if=/dev/random of=input bs=1000 count=1 iflag=fullblock
 
-
+test: clean compile
+	~cs537-1/tests/p3a/test-psort.sh
 
 clean:
 	rm -rf ./*.o
