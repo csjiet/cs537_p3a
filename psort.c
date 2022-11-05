@@ -10,7 +10,7 @@
 
 // Global variable
 char* buf;
-char* refBuf;
+//char* refBuf;
 int bufSize;
 
 // Functions
@@ -50,54 +50,27 @@ void merge(int l, int m, int r){
     int n2 = r - m;
 
     //char L[n1 * RECORD_SIZE], R[n2 * RECORD_SIZE];
+
+    char* L = malloc((n1* RECORD_SIZE) * sizeof(char));
+    char* R = malloc((n2* RECORD_SIZE) * sizeof(char));
+    //char* L = mmap(NULL, n1 * RECORD_SIZE, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_NORESERVE, -1, 0);
+    //char* R = mmap(NULL, n2 * RECORD_SIZE, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_NORESERVE, -1, 0);
+
     // Map <4 byte data, index to refBuf>
-    int L4b[n1], R4b[n2]; // Stores first 4 bytes 
-    int LRefBufIndex[n1], RRefBufIndex[n2]; // Stores index to reference buffer
+    //int L4b[n1], R4b[n2]; // Stores first 4 bytes 
+    //int LRefBufIndex[n1], RRefBufIndex[n2]; // Stores index to reference buffer
 
     // Copy temp array for each division
     //memcpy(&L, (buf + stride(l)), n1 * RECORD_SIZE);
     //memcpy(&R, (buf + stride(m + 1)), n2 * RECORD_SIZE);
+    memcpy(L, (buf + stride(l)), n1 * RECORD_SIZE);
+    memcpy(R, (buf + stride(m + 1)), n2 * RECORD_SIZE);
 
-    for(i = 0; i< n1; i++){
-        L4b[i] = *(int*)(refBuf + stride(l + i));
-        LRefBufIndex[i] = stride(l + i);
-    }
-    
-    for(j = 0; j< n2; j++){
-        R4b[j] = *(int*)(refBuf + stride(m + 1 + j));
-        RRefBufIndex[i] = stride(m + 1 + j);
-    }
-    
     i = 0;
     j = 0;
     k = l;
-
-    while(i < n1 && j < n2){
-        if(L4b[i] <= R4b[j]){
-            memcpy((buf + stride(k)), (refBuf + LRefBufIndex[i]), RECORD_SIZE);
-            i++;
-
-        }else{
-            memcpy((buf + stride(k)), (refBuf + RRefBufIndex[j]), RECORD_SIZE);
-            j++;
-        }
-        k++;
-    }
-
-    while(i < n1){
-        memcpy((buf + stride(k)), (refBuf + LRefBufIndex[i]), RECORD_SIZE);
-        i++;
-        k++;
-    }
-
-    while(j < n2){
-        memcpy((buf + stride(k)), (refBuf + RRefBufIndex[j]), RECORD_SIZE);
-        j++;
-        k++;
-    }
-
     
-    /*
+    
     while(i < n1 && j < n2){
         if(compareRecords((L + stride(i)), (R + stride(j))) < 0){
             memcpy((buf + stride(k)), &L[stride(i)], RECORD_SIZE);
@@ -122,7 +95,10 @@ void merge(int l, int m, int r){
         k++;
     }
 
-    */
+    //munmap(L, n1 * RECORD_SIZE);
+    //munmap(R, n2 * RECORD_SIZE);
+    //free(L);
+    //free(R);
 
 }
 
@@ -156,7 +132,7 @@ int main(int argc, char *argv[]) {
     // Map the input file into a buffer
     //char* buf = mmap(NULL, bufSize, PROT_WRITE, MAP_PRIVATE, fd, 0);
     buf = mmap(NULL, bufSize, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_NORESERVE, fd, 0);
-    refBuf = mmap(NULL, bufSize, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_NORESERVE, fd, 0);
+    //refBuf = mmap(NULL, bufSize, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_NORESERVE, fd, 0);
 
 
     // Loops through each character in the binary file
