@@ -8,12 +8,18 @@
 #define RECORD_SIZE 100
 #define MAP_HUGE_1GB (30 << MAP_HUGE_SHIFT)
 
+// Global variable
+char* buf;
+char* refBuf;
+int bufSize;
+
 // Functions
 // This function compares which character bytes are larger in size
 // Returns negative number if record 1 is <= than record 2
 // Returns positive number if record 1 is > record 2
-int compare(int indexOfRecord1, int indexOfRecord2){
+int compare(int record1, int record2){
 
+    //return record1 - record2;
     return -1;
 }
 
@@ -38,28 +44,60 @@ int stride(int index){
 }
 
 
-void merge(char* buf, int bufSize, int l, int m, int r){
+void merge(int l, int m, int r){
     int i, j, k;
     int n1 = m - l + 1;
     int n2 = r - m;
 
-    char L[n1 * RECORD_SIZE], R[n2 * RECORD_SIZE];
-    //char* L = mmap(NULL, n1* RECORD_SIZE, PROT_WRITE, MAP_PRIVATE, 0, 0);
-    //char* R = mmap(NULL, n2* RECORD_SIZE, PROT_WRITE, MAP_PRIVATE, 0, 0);
+    //char L[n1 * RECORD_SIZE], R[n2 * RECORD_SIZE];
+    // Map <4 byte data, index to refBuf>
+    int L4b[n1], R4b[n2]; // Stores first 4 bytes 
+    int LRefBufIndex[n1], RRefBufIndex[n2]; // Stores index to reference buffer
 
     // Copy temp array for each division
-   
-    // memcpy(&L, &buf[stride(l)], n1 * RECORD_SIZE);
-    // memcpy(&R, &buf[stride(m + 1)], n2 * RECORD_SIZE);
-    memcpy(&L, (buf + stride(l)), n1 * RECORD_SIZE);
-    memcpy(&R, (buf + stride(m + 1)), n2 * RECORD_SIZE);
+    //memcpy(&L, (buf + stride(l)), n1 * RECORD_SIZE);
+    //memcpy(&R, (buf + stride(m + 1)), n2 * RECORD_SIZE);
 
+    for(i = 0; i< n1; i++){
+        L4b[i] = *(int*)(refBuf + stride(l + i));
+        LRefBufIndex[i] = stride(l + i);
+    }
+    
+    for(j = 0; j< n2; j++){
+        R4b[j] = *(int*)(refBuf + stride(m + 1 + j));
+        RRefBufIndex[i] = stride(m + 1 + j);
+    }
     
     i = 0;
     j = 0;
     k = l;
 
+    while(i < n1 && j < n2){
+        if(L4b[i] <= R4b[j]){
+            memcpy((buf + stride(k)), (refBuf + LRefBufIndex[i]), RECORD_SIZE);
+            i++;
+
+        }else{
+            memcpy((buf + stride(k)), (refBuf + RRefBufIndex[j]), RECORD_SIZE);
+            j++;
+        }
+        k++;
+    }
+
+    while(i < n1){
+        memcpy((buf + stride(k)), (refBuf + LRefBufIndex[i]), RECORD_SIZE);
+        i++;
+        k++;
+    }
+
+    while(j < n2){
+        memcpy((buf + stride(k)), (refBuf + RRefBufIndex[j]), RECORD_SIZE);
+        j++;
+        k++;
+    }
+
     
+    /*
     while(i < n1 && j < n2){
         if(compareRecords((L + stride(i)), (R + stride(j))) < 0){
             memcpy((buf + stride(k)), &L[stride(i)], RECORD_SIZE);
@@ -84,18 +122,19 @@ void merge(char* buf, int bufSize, int l, int m, int r){
         k++;
     }
 
+    */
 
 }
 
-void mergeSort(char* buf, int bufSize, int l, int r){
+void mergeSort(int l, int r){
 
     if(l < r){
         int m = l + (r-l) /2;
 
-        mergeSort(buf, bufSize, l, m);
-        mergeSort(buf, bufSize, m+1, r);
+        mergeSort(l, m);
+        mergeSort(m+1, r);
 
-        merge(buf, bufSize, l, m , r);
+        merge(l, m , r);
 
     }
 
@@ -103,7 +142,6 @@ void mergeSort(char* buf, int bufSize, int l, int r){
 
 int main(int argc, char *argv[]) {
     struct stat st;
-    int bufSize;
     
     // Open a file
     //int fd = open(argv[1], O_RDONLY, S_IRUSR | S_IWUSR);  
@@ -117,7 +155,8 @@ int main(int argc, char *argv[]) {
 
     // Map the input file into a buffer
     //char* buf = mmap(NULL, bufSize, PROT_WRITE, MAP_PRIVATE, fd, 0);
-    char* buf = mmap(NULL, bufSize, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_NORESERVE, fd, 0);
+    buf = mmap(NULL, bufSize, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_NORESERVE, fd, 0);
+    refBuf = mmap(NULL, bufSize, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_NORESERVE, fd, 0);
 
 
     // Loops through each character in the binary file
@@ -129,7 +168,7 @@ int main(int argc, char *argv[]) {
 
     // Calls merge sort
     int numberOfRecords = bufSize/ RECORD_SIZE;
-    mergeSort(buf, bufSize, 0, numberOfRecords - 1);
+    mergeSort(0, numberOfRecords - 1);
 
     // Write to an output file
     int file, ret;
