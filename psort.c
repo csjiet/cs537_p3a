@@ -6,13 +6,16 @@
 #include <fcntl.h>
 #include <sys/types.h>
 #include <string.h>
+#include <pthread.h>
+#include <sys/sysinfo.h>
 #define RECORD_SIZE 100
-#define MAP_HUGE_1GB (30 << MAP_HUGE_SHIFT)
+//#define MAP_HUGE_1GB (30 << MAP_HUGE_SHIFT)
 
 // Global variable
 char* buf;
 //char* refBuf;
 int bufSize;
+pthread_mutex_t lock;
 
 // Functions
 // This function compares which character bytes are larger in size
@@ -46,24 +49,17 @@ int stride(int index){
 
 
 void merge(int l, int m, int r){
+
     int i, j, k;
     int n1 = m - l + 1;
     int n2 = r - m;
 
     //char L[n1 * RECORD_SIZE], R[n2 * RECORD_SIZE];
 
+    
     char* L = malloc((n1* RECORD_SIZE) * sizeof(char));
     char* R = malloc((n2* RECORD_SIZE) * sizeof(char));
-    //char* L = mmap(NULL, n1 * RECORD_SIZE, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_NORESERVE, -1, 0);
-    //char* R = mmap(NULL, n2 * RECORD_SIZE, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_NORESERVE, -1, 0);
-
-    // Map <4 byte data, index to refBuf>
-    //int L4b[n1], R4b[n2]; // Stores first 4 bytes 
-    //int LRefBufIndex[n1], RRefBufIndex[n2]; // Stores index to reference buffer
-
-    // Copy temp array for each division
-    //memcpy(&L, (buf + stride(l)), n1 * RECORD_SIZE);
-    //memcpy(&R, (buf + stride(m + 1)), n2 * RECORD_SIZE);
+    
     memcpy(L, (buf + stride(l)), n1 * RECORD_SIZE);
     memcpy(R, (buf + stride(m + 1)), n2 * RECORD_SIZE);
 
@@ -96,43 +92,64 @@ void merge(int l, int m, int r){
         k++;
     }
 
-    //munmap(L, n1 * RECORD_SIZE);
-    //munmap(R, n2 * RECORD_SIZE);
     free(L);
     free(R);
 
 }
 
-void mergeSort(int l, int r){
+void* mergeSort(void* bounds){
 
+    pthread_mutex_lock(&lock);
+    pthread_t thread1;
+    pthread_t thread2;
+
+    int l = *(int*) bounds;
+    int r = *(int*)(bounds + 1);
+
+    int m = l + (r-l) /2;
+
+    pthread_mutex_unlock(&lock);
+    
     if(l < r){
-        int m = l + (r-l) /2;
+        
+        
 
-        mergeSort(l, m);
-        mergeSort(m+1, r);
+        int arr1[2] = {l,m};
+        int arr2[2] = {m+1, r};
+
+        pthread_create(&thread1, NULL, mergeSort, &arr1);
+        pthread_create(&thread2, NULL, mergeSort, &arr2);
+
+        //mergeSort(l, m);
+        //mergeSort(m+1, r);
+        pthread_join(thread1, NULL);
+        pthread_join(thread2, NULL);
 
         merge(l, m , r);
 
     }
 
+    
+
+    return NULL;
 }
+
+
 
 int main(int argc, char *argv[]) {
     struct stat st;
     
     // Open a file
-    //int fd = open(argv[1], O_RDONLY, S_IRUSR | S_IWUSR);
     int fd = open(argv[1], O_RDONLY, S_IRUSR | S_IWUSR);  
-    // if (fd == -1) {
-    //     perror("File doesn't exist");
-    // }
+   
     // Retrieves size of input file
     if (fstat(fd, &st) == -1) {
         fprintf(stderr, "An error has occurred\n");
         exit(0);
     }
     bufSize = st.st_size;
-
+    
+    // printf("NUMPROCS: %d\n", np);
     if (bufSize == 0) {
         fprintf(stderr, "An error has occurred\n");
         exit(0);
@@ -142,17 +159,31 @@ int main(int argc, char *argv[]) {
     buf = mmap(NULL, bufSize, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_NORESERVE, fd, 0);
     //refBuf = mmap(NULL, bufSize, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_NORESERVE, fd, 0);
 
-
-    // Loops through each character in the binary file
     /*
-    for(int i = 0; i< st.st_size; i++){
-        printf("%c", buf[i]);
+    int np = get_nprocs();
+    pthread_t threads[np];
+    for (int i = 0; i < np; i++) {
+        pthread_create(&threads[i], NULL, mergeSort, (void*)NULL);
     }
     */
 
     // Calls merge sort
     int numberOfRecords = bufSize/ RECORD_SIZE;
-    mergeSort(0, numberOfRecords - 1);
+
+    //pthread_t thread;
+    int arr[2] = {0, numberOfRecords - 1};
+
+    if (pthread_mutex_init(&lock, NULL) != 0) {
+            printf("\n mutex init has failed\n");
+            return 1;
+    }
+
+    //pthread_create(&thread, NULL, mergeSort, &arr);
+    mergeSort(&arr);
+
+    //pthread_join(thread, NULL);
+
+    //mergeSort(0, numberOfRecords - 1);
 
     // Write to an output file
     int file, ret;
