@@ -97,8 +97,8 @@ void merge(int l, int m, int r){
 
     //munmap(L, n1 * RECORD_SIZE);
     //munmap(R, n2 * RECORD_SIZE);
-    //free(L);
-    //free(R);
+    free(L);
+    free(R);
 
 }
 
