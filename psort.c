@@ -6,6 +6,8 @@
 #include <fcntl.h>
 #include <sys/types.h>
 #include <string.h>
+#include <pthread.h>
+#include <sys/sysinfo.h>
 #define RECORD_SIZE 100
 #define MAP_HUGE_1GB (30 << MAP_HUGE_SHIFT)
 
@@ -13,7 +15,9 @@
 char* buf;
 //char* refBuf;
 int bufSize;
+int section = 0;
 
+pthread_mutex_t lock;
 // Functions
 // This function compares which character bytes are larger in size
 // Returns negative number if record 1 is <= than record 2
@@ -117,6 +121,25 @@ void mergeSort(int l, int r){
 
 }
 
+void* thread_mergeSort(void* args) {
+    pthread_mutex_lock(&lock);
+    int nprocs = get_nprocs();
+    int thread_section = section++;
+    int elements = (bufSize / RECORD_SIZE);
+    int low = thread_section * (elements / nprocs);
+    int high = (thread_section + 1) * (elements / nprocs) - 1;
+
+    int mid = low + (high - low) / 2;
+    if (low < high) {
+        mergeSort(low, mid);
+        mergeSort(mid + 1, high);
+        merge(low, mid, high);
+    }
+
+    pthread_mutex_unlock(&lock);
+    return NULL;
+}
+
 int main(int argc, char *argv[]) {
     struct stat st;
     
@@ -141,15 +164,18 @@ int main(int argc, char *argv[]) {
     //char* buf = mmap(NULL, bufSize, PROT_WRITE, MAP_PRIVATE, fd, 0);
     buf = mmap(NULL, bufSize, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_NORESERVE, fd, 0);
     //refBuf = mmap(NULL, bufSize, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_NORESERVE, fd, 0);
-
-
-    // Loops through each character in the binary file
-    /*
-    for(int i = 0; i< st.st_size; i++){
-        printf("%c", buf[i]);
+    int np = get_nprocs();
+    pthread_t threads[np];
+    if (pthread_mutex_init(&lock, NULL) != 0) {
+        fprintf(stderr, "Mutex init failed\n");
+        exit(1);
     }
-    */
-
+    for (int i = 0; i < np; i++) {
+        pthread_create(&threads[i], NULL, thread_mergeSort, (void*)NULL);
+    }
+    for (int i = 0; i < np; i++) {
+        pthread_join(threads[i], NULL);
+    }
     // Calls merge sort
     int numberOfRecords = bufSize/ RECORD_SIZE;
     mergeSort(0, numberOfRecords - 1);

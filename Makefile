@@ -10,23 +10,23 @@ compile:
 compileR:
 	gcc -Wall -pthread -O psort.c -o psort  
 
-hexDump: input.bin output.bin
-	hexdump input.bin > inputHex.txt
-	hexdump output.bin > outputHex.txt
+hexDump: input output
+	hexdump input > inputHex.txt
+	hexdump output > outputHex.txt
 
-hexDumpVerbose: input.bin output.bin
-	hexdump --canonical input.bin > inputHex.txt
-	hexdump --canonical output.bin > outputHex.txt
+hexDumpVerbose: input output
+	hexdump --canonical input > inputHex.txt
+	hexdump --canonical output > outputHex.txt
 
-hexDumpInteger: input.bin output.bin
-	hexdump -e'25/4 "%d ""\n"' output.bin > outputHex.txt
-	hexdump -e'25/4 "%d ""\n"' input.bin > inputHex.txt
+hexDumpInteger: input output
+	hexdump -e'25/4 "%d ""\n"' output > outputHex.txt
+	hexdump -e'25/4 "%d ""\n"' input > inputHex.txt
 
 genRandBin:
 	dd if=/dev/random of=input bs=1000 count=1 iflag=fullblock
 
 test: clean compile
-	~cs537-1/tests/p3a/test-psort.sh
+	time ~cs537-1/tests/p3a/test-psort.sh
 
 clean:
 	rm -rf ./*.o
