@@ -58,16 +58,8 @@ void merge(int l, int m, int r){
 
     char* L = malloc((n1* RECORD_SIZE) * sizeof(char));
     char* R = malloc((n2* RECORD_SIZE) * sizeof(char));
-    //char* L = mmap(NULL, n1 * RECORD_SIZE, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_NORESERVE, -1, 0);
-    //char* R = mmap(NULL, n2 * RECORD_SIZE, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_NORESERVE, -1, 0);
-
-    // Map <4 byte data, index to refBuf>
-    //int L4b[n1], R4b[n2]; // Stores first 4 bytes 
-    //int LRefBufIndex[n1], RRefBufIndex[n2]; // Stores index to reference buffer
 
     // Copy temp array for each division
-    //memcpy(&L, (buf + stride(l)), n1 * RECORD_SIZE);
-    //memcpy(&R, (buf + stride(m + 1)), n2 * RECORD_SIZE);
     memcpy(L, (buf + stride(l)), n1 * RECORD_SIZE);
     memcpy(R, (buf + stride(m + 1)), n2 * RECORD_SIZE);
 
@@ -100,8 +92,6 @@ void merge(int l, int m, int r){
         k++;
     }
 
-    //munmap(L, n1 * RECORD_SIZE);
-    //munmap(R, n2 * RECORD_SIZE);
     free(L);
     free(R);
 
@@ -144,11 +134,8 @@ int main(int argc, char *argv[]) {
     struct stat st;
     
     // Open a file
-    //int fd = open(argv[1], O_RDONLY, S_IRUSR | S_IWUSR);
     int fd = open(argv[1], O_RDONLY, S_IRUSR | S_IWUSR);  
-    // if (fd == -1) {
-    //     perror("File doesn't exist");
-    // }
+    
     // Retrieves size of input file
     if (fstat(fd, &st) == -1) {
         fprintf(stderr, "An error has occurred\n");
@@ -161,9 +148,8 @@ int main(int argc, char *argv[]) {
         exit(0);
     }
     // Map the input file into a buffer
-    //char* buf = mmap(NULL, bufSize, PROT_WRITE, MAP_PRIVATE, fd, 0);
     buf = mmap(NULL, bufSize, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_NORESERVE, fd, 0);
-    //refBuf = mmap(NULL, bufSize, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_NORESERVE, fd, 0);
+    
     int np = get_nprocs();
     pthread_t threads[np];
     if (pthread_mutex_init(&lock, NULL) != 0) {
